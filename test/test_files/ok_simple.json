@@ -1,0 +1,12 @@
+{
+    "hoegaarden" : {
+        "1370694103" : [
+            { "value" : 50 , "type" : "humidity" , "id" : "seas" } ,
+            { "value" : 230e-10 , "type" : "temperature" } ,
+            { "value" : "+23.1e12" , "type" : "temperature", "id" : "other temp" }
+        ] ,
+        "1234567890" : [
+            { "value" : 100 , "type" : "particle_concentration" }
+        ]
+    }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "dustmap-payload",
+  "version": "0.0.0",
+  "description": "Payload validation & generation module for dustmap",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd test && nodeunit index.js"
+  },
+  "repository": "",
+  "keywords": [
+    "dustmap",
+    "payload"
+  ],
+  "author": "Hannes Hörl",
+  "license": "BSD",
+  "devDependencies": {
+    "nodeunit": "*"
+  },
+  "dependencies": {
+    "jayschema": "~0.1.5"
+  }
+}
