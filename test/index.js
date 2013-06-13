@@ -61,36 +61,17 @@ T['pipe'] = function(test) {
 
     test.expect(1);
 
-    payload.on('finish', function(){
-        test.deepEqual( payload.getDoc() , file_content );
+    payload.on('parsed', function(doc){
+        test.deepEqual( doc , file_content );
         test.done();
     });
 
     rs.pipe(payload);
-}
-
-T['write after end gives an error'] = function(test){
-    var file = './test_files/ok_simple.json'
-      , rs = fs.createReadStream(file)
-      , payload = new Payload()
-    ;
-
-    rs.pipe(payload);
-
-    rs.on('end', function(){
-        test.throws(function(){
-            payload.write('just a test');
-        });
-
-        test.done();
-    });
 }
 
 T['multiple docs gives an error'] = function(test){
     var payload = new Payload();
-
-    // payload.write('{"node":{"1":[{"value":10,"type":"type"}]}}');
-    // payload.end('{"node":{"1":[{"value":10,"type":"type"}]}}');
+    var content = fs.readFileSync('./test_files/ok_simple.json');
 
     test.expect(1);
 
@@ -99,8 +80,42 @@ T['multiple docs gives an error'] = function(test){
         test.done();
     });
 
-    payload.write('{}');
+    payload.write(content);
+    payload.end(content);
+}
+
+T['valid doc emits "parsed"'] = function(test){
+    var payload = new Payload();
+
+    test.expect(1);
+
+    payload.on('error', function(){
+        test.ok(false, '"error" must not be emitted');
+    });
+    payload.on('parsed', function(){
+        test.ok(true);
+    });
+    payload.on('finish', function(){
+        test.done();
+    });
+
+    payload.end(fs.readFileSync('./test_files/ok_simple.json'));
+}
+
+T['invalid doc does not emit "parsed"'] = function(test){
+    var payload = new Payload();
+
+    test.expect(1);
+
+    payload.on('error', function(){
+        test.ok(true);
+    });
+    payload.on('parsed', function(){
+        test.ok(false, '"parsed" must not be emitted');
+    });
+    payload.on('finish', function(){
+        test.done();
+    });
+
     payload.end('{}');
-
-
 }

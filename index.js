@@ -69,6 +69,10 @@ function parseOnFinish() {
      * More validation checks ... ?
      */
     // TODO ...
+    
+    this.emit('parsed', this.getDoc());
+
+    return this;
 }
 
 function appendRaw(chunk, enc) {
