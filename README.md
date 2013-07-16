@@ -10,6 +10,29 @@ This module includes two central parts of the dustmap project
 
 The [JSON Schema] can be found [here][dm-schema] and can be used with any schema validator which can handle [draft-04 schemas][schema-draft-4].
 
+A valid upload encoded as json could look like:
+
+```json
+{
+    "node id 1" : {
+        "1234567890" : [
+            { "type" : "temperature", "value" : 12.3, "id" : "outside temp" } ,
+            { "type" : "temperature", "value" : 22.5, "id" : "inside temp" }
+        ]
+    } ,
+    "other node" : {
+        "1234567891" : [
+            { "type" : "humidity", "value" : 50 , "id" : "single sensor node" }
+        ]
+    }
+}
+```
+
+ * every upload can have data for multiple but at least one node
+ * every node's data can be data for one or more point in time
+ * for every point in time there can be one or more specific measurements
+ * each measurement must exist of value and type and can optnionally have an identifier
+
 ## Implementation
 
 ### Writable Stream
