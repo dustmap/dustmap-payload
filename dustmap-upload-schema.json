@@ -9,8 +9,8 @@
 
     "definitions" : {
         "value_type" : {
-            "title" : "Value Tuple" ,
-            "description" : "A measurment described by a value and the value's type" ,
+            "title" : "Value Type" ,
+            "description" : "Valid types of a measurement" ,
             "type" : "string" ,
             "enum" : [
                 "temperature" ,
@@ -21,7 +21,7 @@
 
         "value_tuple" : {
             "title" : "Value Tuple" ,
-            "description" : "A measurment described by a value and the value's type" ,
+            "description" : "A measurement described by a value and the value's type and optionally an identifier" ,
             "type" : "object" ,
             "properties" : {
                 "value" : {
@@ -47,7 +47,7 @@
         
         "datasets" : {
             "title" : "Node Datasets" ,
-            "description" : "Hilds multiple datasets for a specific dustmap node" ,
+            "description" : "Holds multiple datasets for a specific dustmap node" ,
             "type" : "object" ,
             "additionalProperties" : false ,
             "minProperties" : 1 ,

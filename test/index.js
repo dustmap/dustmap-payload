@@ -45,15 +45,15 @@ T['finding errors'] = function(test) {
             if (counter >= docs.length)
               test.done();
         });
-        payload.on('error', function(e, r){
-            test.ok(e instanceof Error, msg + ' ' + doc);
+        payload.on('error', function(e){
+            test.ok(msg + ' ' + doc);
         });
         payload.end(doc);
     });
 }
 
 T['pipe'] = function(test) {
-    var file = './test_files/ok_simple.json'
+    var file = __dirname + '/test_files/ok_simple.json'
       , rs = fs.createReadStream(file)
       , payload = new Payload()
       , file_content = require(file)
@@ -71,12 +71,12 @@ T['pipe'] = function(test) {
 
 T['multiple docs gives an error'] = function(test){
     var payload = new Payload();
-    var content = fs.readFileSync('./test_files/ok_simple.json');
+    var content = fs.readFileSync(__dirname + '/test_files/ok_simple.json');
 
     test.expect(1);
 
     payload.on('error', function(err){
-        test.ok(err instanceof Error);
+        test.ok(err);
         test.done();
     });
 
@@ -99,7 +99,7 @@ T['valid doc emits "parsed"'] = function(test){
         test.done();
     });
 
-    payload.end(fs.readFileSync('./test_files/ok_simple.json'));
+    payload.end(fs.readFileSync(__dirname + '/test_files/ok_simple.json'));
 }
 
 T['invalid doc does not emit "parsed"'] = function(test){
@@ -118,4 +118,121 @@ T['invalid doc does not emit "parsed"'] = function(test){
     });
 
     payload.end('{}');
+}
+
+T['build new valid payload'] = function(test){
+    var payload = new Payload();
+
+    var node_name = 'test node '.concat( Math.random(100, 1000) )
+      , ts = parseInt( (new Date()).getTime()/1000 )
+      , m = { 'type' : 'temperature' , 'value' : Math.random(0, 100) }
+      , doc_expected = {};
+    ;
+
+    doc_expected[ node_name ] = {};
+    doc_expected[ node_name ][ ts ] = [ m ];
+
+    payload.addUpload(node_name, ts, m);
+
+    test.expect(2);
+
+    payload.on('error', function(err){
+        test.ok(false, 'should not emit error');
+    });
+
+    payload.on('parsed', function(doc){
+        test.ok(doc, 'should emit parsed');
+    });
+
+    payload.getDoc(function(err, doc){
+        if (err)
+            test.ok(false, 'must not emit an error');
+
+        test.deepEqual(doc, doc_expected);
+        test.done();
+    });
+}
+
+T['build new invalid payload'] = function(test){
+    var payload = new Payload();
+
+    payload.addUpload('test node', 'invalid');
+
+    test.expect(2);
+
+    payload.on('error', function(err){
+        test.ok(err, 'should emit error');
+    });
+
+    payload.on('parsed', function(doc){
+        test.ok(false, 'should not emit parsed');
+    });
+
+    payload.getDoc(function(err, doc){
+        if (err)
+            test.ok(err, 'should callback with error');
+        test.done();
+    });
+}
+
+T['build new payload with multiple nodes and uploads'] = function(test){
+    var doc_expected = {
+        'node 1' : {
+            '1234567890' : [
+                { type: 'temperature' , value: 1 }
+              , { type: 'temperature' , value: 2 , id : 'second temp' }
+            ]
+          , '1234567891' : [
+                { type: 'temperature' , value: 1 }
+              , { type: 'humidity' , value: 50 }
+              , { type: 'humidity' , value: 0 , id : 'second hum' }
+            ]
+        }
+      , 'node 2' : {
+            '1212121212' : [
+                { type: 'temperature' , value: 1 }
+              , { type: 'humidity' , value: 50 }
+              , { type: 'humidity' , value: 0 , id : 'second hum' }
+              , { type: 'temperature' , value: 1 }
+              , { type: 'humidity' , value: 50 }
+              , { type: 'humidity' , value: 0 , id : 'second hum' }
+            ]
+          , '2323232323' : [
+                { type: 'temperature' , value: 1 }
+              , { type: 'humidity' , value: 50 }
+              , { type: 'humidity' , value: 0 , id : 'second hum' }
+              , { type: 'temperature' , value: 1 }
+              , { type: 'humidity' , value: 50 }
+              , { type: 'humidity' , value: 0 , id : 'second hum' }
+            ]
+        }
+    };
+
+    var payload = new Payload();
+
+    payload.on('error', function(err){
+        test.ok(false, 'must not emit an error');
+    });
+
+    payload.on('parsed', function(doc){
+        test.ok(doc, 'must emit a parsed');
+    });
+
+    Object.keys(doc_expected).forEach(function(node){
+        var datasets = doc_expected[node];
+        Object.keys(datasets).forEach(function(ts){
+            var dataset = datasets[ts];
+            dataset.forEach(function(m){
+                payload.addUpload(node, ts, m);
+            });
+        });
+    });
+
+    payload.getDoc(function(err, doc){
+        if (err)
+            test.ok(false, 'must not callback with error');
+        test.deepEqual(doc, doc_expected);
+        test.done();
+    });
+
 }
