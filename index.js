@@ -13,16 +13,23 @@ function Payload(opts) {
         return new Payload(opts);
     }
 
-    stream.Writable.call(this, opts);
+    stream.Duplex.call(this, opts);
 
     this._ = {
         raw : ''
       , doc : undefined
+      , readable : false
     };
 
     this.on('finish', parse);
+
+    // give it a kick whenever the source is readable
+    // read(0) will not consume any bytes
+    this.on('parsed', this.read.bind(this, 0));
+
+    return this;
 }
-Payload.prototype = Object.create( stream.Writable.prototype, {
+Payload.prototype = Object.create( stream.Duplex.prototype, {
     constructor: { value: Payload }
 });
 
@@ -35,29 +42,31 @@ Payload.prototype._write = function(chunk, enc, cb) {
     cb();
 };
 
+/**
+ * Readable Stream implementation
+ */
+Payload.prototype._read = function(size) {
+    if (! this._.readable) {
+        return this.push('');
+    } else {
+        this.push( JSON.stringify(this._.doc) );
+        return this.push(null);
+    }
+};
+
 
 /**
  * Public Methods
  */
-Payload.prototype.getDoc = function(cb) {
-    var self = this;
- 
-    self.on('parsed', function(doc){
-        return cb(null, doc);
-    });
-
-    self.on('error', function(err){
-        return cb(err);
-    });
-
-    checkDoc.call(self);
-};
-
-Payload.prototype.clear = function() {
-    this._.doc = undefined;
+Payload.prototype.endUpload = function() {
+    this.addUpload.apply(this, arguments);
+    return checkDoc.call(this);
 };
 
 Payload.prototype.addUpload = function(node, ts, m, replace) {
+    if (arguments.length < 3)
+        return;
+
     if (this._.doc === undefined)
         this._.doc = {};
 
@@ -100,7 +109,8 @@ function checkDoc() {
      * More validation checks ... ?
      */
     // TODO ...
-    
+
+    this._.readable = true;    
     this.emit('parsed', this._.doc);
 
     return this;    
